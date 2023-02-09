@@ -11,16 +11,18 @@ Lab 2 - Out of Control
 from matplotlib import pyplot
 import serial
 
-good = [False, False]
+good = [False, False, False]
 
 try:
     while True:
 
         print('enter "plot" in kp to plot the curve(s)')
 
-        kp = input("what is the value of kp? ")
-        if kp == "plot" or kp == "plot1": raise KeyboardInterrupt
-        endpos = input("what is the final position? ")
+        kp1 = input("what is the value of kp for motor 1? ")
+        if kp1 == "plot" or kp1 == "plot1": raise KeyboardInterrupt
+        endpos1 = input("what is the final position for motor 1? ")
+        kp2 = input("what is the value of kp for motor 2? ")
+        endpos2 = input("what is the final position for motor 1? ")
 
         
 
@@ -29,11 +31,19 @@ try:
             file.write(b"start")
             print("started")
             
-            exec(f"file.write(b'{kp}')")
+            exec(f"file.write(b'{kp1}')")
 
             file.write(b"\r \n")
             
-            exec(f"file.write(b'{endpos}')")
+            exec(f"file.write(b'{endpos1}')")
+
+            file.write(b"\r \n")
+
+            exec(f"file.write(b'{kp2}')")
+
+            file.write(b"\r \n")
+            
+            exec(f"file.write(b'{endpos2}')")
 
             file.write(b"\r \n")
             
@@ -45,6 +55,7 @@ try:
             data = []
             numx = []
             numy = []
+            numz = []
 
             for asdf in range(300):
                 datastr = file.readline()
@@ -76,15 +87,29 @@ try:
                 else:
                     good[1] = True
 
-                if good == [True,True]:
+                try:
+                    sep[2] = sep[2].strip()
+                    strip = sep[2].strip(" #Aabcdefghijklmnopqrstuvwxyz ")
+                    z = float(strip)
+                except ValueError:
+                    good[2] = False
+                except IndexError:
+                    good[2] = False
+                else:
+                    good[2] = True
+
+                if good == [True,True,True]:
                     numx.append(x)
                     numy.append(y)
-                elif good == [False,True]:
+                    numz.append(z)
+                elif good == [False,True,True]:
                     print(f"bad string {sep[0]}")
-                elif good == [True,False]:
+                elif good == [True,False,True]:
                     print(f"bad string {sep[1]}")
+                elif good == [True,True,False]:
+                    print(f"bad string {sep[2]}")
                 else:
-                    print(f"both strings bad {sep}")
+                    print(f"2-3 strings bad {sep}")
 
                     
         #titley = titley.strip()
@@ -93,7 +118,7 @@ try:
         pyplot.ylabel("Position")
 
 except KeyboardInterrupt:
-    if kp == "plot1":
+    if kp1 == "plot1":
         pyplot.legend(["kp too low","kp too high","kp perfect"])
     print("stopped")
     pyplot.show()

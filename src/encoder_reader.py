@@ -56,23 +56,23 @@ class EncoderReader:
 
         @returns Current position of the encoder
         """
-        
-        self.delt = self.encnow - self.encthen
-        self.encthen = self.encnow
-        #print("encnow", self.encnow)
-        #print("encthen", self.encthen)
-        #print("delt", self.delt)
-        reset = 32768
-        if self.delt > reset:
+        while True:
+            self.delt = self.encnow - self.encthen
             self.encthen = self.encnow
-            self.delt -= 2*reset
-            self.position = self.position + self.delt
-        elif self.delt < -reset:
-            self.encthen = self.encnow
-            self.delt += 2*reset
-            self.position = self.position + self.delt
-        else:
-            self.position = self.position + self.delt
-        self.encnow = self.timer.counter()
-        return self.position
+            #print("encnow", self.encnow)
+            #print("encthen", self.encthen)
+            #print("delt", self.delt)
+            reset = 32768
+            if self.delt > reset:
+                self.encthen = self.encnow
+                self.delt -= 2*reset
+                self.position = self.position + self.delt
+            elif self.delt < -reset:
+                self.encthen = self.encnow
+                self.delt += 2*reset
+                self.position = self.position + self.delt
+            else:
+                self.position = self.position + self.delt
+            self.encnow = self.timer.counter()
+            yield self.position
     

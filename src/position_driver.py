@@ -23,20 +23,21 @@ class PositionDriver:
         @param kp 1000x the times of kp
         @returns The level used by motor_driver
         """
-        if kp != 8675309: self.kp = kp/1000
-        if setpoint != 8675309: self.end = setpoint
+        while True:
+            if kp != 8675309: self.kp = kp/1000
+            if setpoint != 8675309: self.end = setpoint
 
-        self.now = posnow
-        self.error = self.end - self.now
-        #print(self.error)
-        level = self.error * self.kp
+            self.now = posnow
+            self.error = self.end - self.now
+            #print(self.error)
+            level = self.error * self.kp
 
-        if level > 100:
-            level = 100
-        elif level < -100:
-            level = -100
+            if level > 100:
+                level = 100
+            elif level < -100:
+                level = -100
 
-        return level
+            yield level
 
     def set_setpoint(self,setpoint):
         """!

@@ -37,20 +37,22 @@ class MotorDriver:
         @param level A signed integer holding the duty
                cycle of the voltage sent to the motor 
         """
-        level = -level
-        self.enab_pin.high()
+        while True:
+            level = -level
+            self.enab_pin.high()
+            
+            if level > 0:
+                #print("level > 0")
+                self.t3ch1.pulse_width_percent(0)
+                self.t3ch2.pulse_width_percent(level)
         
-        if level > 0:
-            #print("level > 0")
-            self.t3ch1.pulse_width_percent(0)
-            self.t3ch2.pulse_width_percent(level)
-       
-        elif level < 0:
-            #print("level < 0")
-            self.t3ch1.pulse_width_percent(-level)
-            self.t3ch2.pulse_width_percent(0)
-        
-        else:
-            self.t3ch1.pulse_width_percent(0)
-            self.t3ch2.pulse_width_percent(0)
-        #print (f"Setting duty cycle to {level}")
+            elif level < 0:
+                #print("level < 0")
+                self.t3ch1.pulse_width_percent(-level)
+                self.t3ch2.pulse_width_percent(0)
+            
+            else:
+                self.t3ch1.pulse_width_percent(0)
+                self.t3ch2.pulse_width_percent(0)
+            #print (f"Setting duty cycle to {level}")
+            yield
