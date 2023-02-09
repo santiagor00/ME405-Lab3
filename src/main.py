@@ -15,6 +15,89 @@ import pyb
 import cotask
 import task_share
 
+import utime
+import motor_driver
+import encoder_reader
+import position_driver
+import array
+from pyb import repl_uart
+from pyb import UART
+
+
+def pinsetup():
+    tim8 = pyb.Timer (8, prescaler=0, period=0xFFFF)
+    tim3 = pyb.Timer (3, freq=20000)
+    tim5 = pyb.Timer (5, freq=20000)
+
+    pinC6 = pyb.Pin (pyb.Pin.board.PC6, pyb.Pin.OUT_PP) 
+  
+    pinC7 = pyb.Pin (pyb.Pin.board.PC7, pyb.Pin.OUT_PP)
+      
+      
+    encreader1 = encoder_reader.EncoderReader(pinC6, pinC7, tim8)
+      
+    ENA = pyb.Pin (pyb.Pin.board.PA10, pyb.Pin.OUT_OD, pyb.Pin.PULL_UP)
+    IN1A = pyb.Pin (pyb.Pin.board.PB4, pyb.Pin.OUT_PP)
+    IN2A = pyb.Pin (pyb.Pin.board.PB5, pyb.Pin.OUT_PP)
+      
+    ENA.high()
+      
+    mdriver1 = motor_driver.MotorDriver(ENA, IN1A, IN2A, tim3)
+    pdriver1 = position_driver.PositionDriver()
+      
+    p = True
+
+    
+
+    time = array.array("i",300*[0])
+    pos1 = array.array("i",300*[0])
+    pos2 = array.array("i",300*[0])
+
+    n = 0
+    start = "a"
+    waiter = 0
+    class motor:
+        def __init__(self):
+            self.kp = 0
+            self.endpos = 0
+    
+    m1 = motor()
+    m2 = motor()
+
+    repl_uart(None)
+
+    ser = UART(2,115200)
+    while start != "start":
+        while waiter == 0:
+            waiter = ser.any()
+        startbyte = ser.read(5)
+        
+        start = startbyte.decode()
+
+        utime.sleep_ms(5)
+    
+    m1.kp = ser.readline()
+    m1.endpos = ser.readline()
+    m2.kp = ser.readline()
+    m2.endpos = ser.readline()
+
+    m1.kp = m1.kp.decode()
+    m1.endpos = m1.endpos.decode()
+    m2.kp = m2.kp.decode()
+    m2.endpos = m2.endpos.decode()
+
+    m1.kp = m1.kp.strip()
+    m1.endpos = m1.endpos.strip()
+    m2.kp = m2.kp.strip()
+    m2.endpos = m2.endpos.strip()
+
+    m1.kp = int(m1.kp)
+    m1.endpos = int(m1.endpos)
+    m2.kp = int(m2.kp)
+    m2.endpos = int(m2.endpos)
+
+    timestart = utime.ticks_ms()
+
 
 def task1_fun(shares):
     """!
@@ -55,6 +138,7 @@ def task2_fun(shares):
 # tasks run until somebody presses ENTER, at which time the scheduler stops and
 # printouts show diagnostic information about the tasks, share, and queue.
 if __name__ == "__main__":
+    pinsetup()
     print("Testing ME405 stuff in cotask.py and task_share.py\r\n"
           "Press Ctrl-C to stop and show diagnostics.")
 
