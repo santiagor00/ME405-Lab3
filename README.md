@@ -9,4 +9,8 @@ The MCU uses proportional control to make the motors rotate to the setpoint posi
 
 The period of the motor control task used in this program is 35 ms. This value was used because it is not excessively fast, while allowing for motor control performance similar to the performance using faster periods. This was tested using a motor connected to a metal flywheel.
 
-## Figure 1:
+## Figure 1: Task Just Fast Enough
+This plot shows the step response of a motor attached to a flywheel when then motor control task period was 45 ms. The setpoint was 15000, and the Kp was 10. Making the period smaller than 45 ms did not cause any noticable improvements in the response. However, it is recommended to use a 35 ms motor control task period to provide a safety factor.
+
+## Figure 2: Task Too Slow
+This plot shows the step response of a motor attached to a flywheel when the motor contol task period was 60 ms. The setpoint was 15000, and the Kp was 10. Notice how the motor overshoots the setpoint, despite having the same setpoint and Kp as the previous figure. This is because when the period is too slow, the motor keeps moving past the setpoint long after passing it, until the motor speed is updated the next time the motor control task is run. 
