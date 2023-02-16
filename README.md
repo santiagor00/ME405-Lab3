@@ -11,6 +11,9 @@ The period of the motor control task used in this program is 35 ms. This value w
 
 ## Figure 1: Task Just Fast Enough
 This plot shows the step response of a motor attached to a flywheel when then motor control task period was 45 ms. The setpoint was 15000, and the Kp was 10. Making the period smaller than 45 ms did not cause any noticable improvements in the response. However, it is recommended to use a 35 ms motor control task period to provide a safety factor.
+![45](https://user-images.githubusercontent.com/91160149/219314888-6565c54d-2861-4af4-b87b-2df1c2e73191.JPG)
+
 
 ## Figure 2: Task Too Slow
 This plot shows the step response of a motor attached to a flywheel when the motor contol task period was 60 ms. The setpoint was 15000, and the Kp was 10. Notice how the motor overshoots the setpoint, despite having the same setpoint and Kp as the previous figure. This is because when the period is too slow, the motor keeps moving past the setpoint long after passing it, until the motor speed is updated the next time the motor control task is run. 
+![60](https://user-images.githubusercontent.com/91160149/219314748-677a0961-0681-4a21-8166-6de6b34ce838.JPG)
