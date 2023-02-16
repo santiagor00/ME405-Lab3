@@ -11,7 +11,7 @@ Lab 2 - Out of Control
 from matplotlib import pyplot
 import serial
 
-good = [False, False, False]
+good = [False, False, False, False]
 
 try:
     while True:
@@ -53,9 +53,10 @@ try:
             
 
             data = []
-            numx = []
-            numy = []
-            numz = []
+            numx1 = []
+            numy1 = []
+            numx2 = []
+            numy2 = []
 
             for asdf in range(300):
                 datastr = file.readline()
@@ -98,22 +99,34 @@ try:
                 else:
                     good[2] = True
 
+                try:
+                    sep[3] = sep[3].strip()
+                    strip = sep[3].strip(" #Aabcdefghijklmnopqrstuvwxyz ")
+                    w = float(strip)
+                except ValueError:
+                    good[3] = False
+                except IndexError:
+                    good[3] = False
+                else:
+                    good[3] = True
+
                 if good == [True,True,True]:
-                    numx.append(x)
-                    numy.append(y)
-                    numz.append(z)
-                elif good == [False,True,True]:
+                    numx1.append(x)
+                    numy1.append(y)
+                    numx2.append(z)
+                    numy2.append(w)
+                elif good == [False,True,True,True]:
                     print(f"bad string {sep[0]}")
-                elif good == [True,False,True]:
+                elif good == [True,False,True,True]:
                     print(f"bad string {sep[1]}")
-                elif good == [True,True,False]:
+                elif good == [True,True,False,True]:
                     print(f"bad string {sep[2]}")
                 else:
-                    print(f"2-3 strings bad {sep}")
+                    print(f"2-4 strings bad {sep}")
 
                     
         #titley = titley.strip()
-        pyplot.plot(numx,numy)
+        pyplot.plot(numx1,numy1)
         pyplot.xlabel("time (ms)")
         pyplot.ylabel("Position")
 

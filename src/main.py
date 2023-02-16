@@ -25,6 +25,7 @@ from pyb import UART
 
 
 def pinsetup():
+    global ser
 
     n = 0
     start = "a"
@@ -167,9 +168,16 @@ def motor2(shares2):
         yield 0
 
 def serprint(shares):
+    global ser
     qtim1, qpos1, qtim2, qpos2 = shares
 
-    ser.write(f"{time[i]},{pos[i]}\r \n")
+    if fin != 2:
+        tim1 = qtim1.get()
+        pos1 = qpos1.get()
+        tim2 = qtim2.get()
+        pos2 = qpos2.get()
+
+        ser.write(f"{tim1},{pos1},{tim2},{pos2}\r \n")
 
     yield 0
 
