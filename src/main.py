@@ -79,6 +79,7 @@ def motor1(shares1):
     Task which puts things into a share and a queue.
     @param shares A list holding the share and queue used by this task
     """
+    print("in motor1")
     # Get references to the share and queue which have been passed to this task
     qtim1, qpos1, skp1, sendpos1, fin = shares1
 
@@ -112,12 +113,14 @@ def motor1(shares1):
         mdriver1.set_duty_cycle(level)
         timenow = utime.ticks_ms()
         if n != 300:
-            qtim1.put(utime.ticks_diff(timenow,timestart))
-            qpos1.put(posnow)
-            n += 1
+            if qtim1.full() == False and qpos1.full() == False:
+                qtim1.put(utime.ticks_diff(timenow,timestart))
+                qpos1.put(posnow)
+                n += 1
         else:
             fin.put(fin.get()+1)
 
+        print("end motor1, n=",n)
         yield 0
 
 
@@ -127,13 +130,14 @@ def motor2(shares2):
     @param shares A tuple of a share and queue from which this task gets data
     """
     # Get references to the share and queue which have been passed to this task
+    print("in motor2")
     qtim2, qpos2, skp2, sendpos2, fin = shares2
 
     tim4 = pyb.Timer (4, prescaler=0, period=0xFFFF)
     tim5 = pyb.Timer (5, freq=20000)
 
-    pinB6 = pyb.Pin (pyb.Pin.board.pB6, pyb.pin.OUT_PP)
-    pinB7 = pyb.Pin (pyb.Pin.board.pB7, pyb.pin.OUT_PP)
+    pinB6 = pyb.Pin (pyb.Pin.board.PB6, pyb.Pin.OUT_PP)
+    pinB7 = pyb.Pin (pyb.Pin.board.PB7, pyb.Pin.OUT_PP)
 
     encreader2 = encoder_reader.EncoderReader(pinB6, pinB7, tim4)
 
@@ -159,27 +163,33 @@ def motor2(shares2):
         mdriver2.set_duty_cycle(level)
         timenow = utime.ticks_ms()
         if n != 300:
-            qtim2.put(utime.ticks_diff(timenow,timestart))
-            qpos2.put(posnow)
-            n += 1
+            if qtim2.full() == False and qpos2.full() == False:
+                qtim2.put(utime.ticks_diff(timenow,timestart))
+                qpos2.put(posnow)
+                n += 1
         else:
             fin.put(fin.get()+1)
-
+        print("end motor2, n=",n)
         yield 0
 
 def serprint(shares):
+    print("in serprint")
+    
     global ser
-    qtim1, qpos1, qtim2, qpos2 = shares
+    qtim1, qpos1, qtim2, qpos2, fin = shares
 
-    if fin != 2:
-        tim1 = qtim1.get()
-        pos1 = qpos1.get()
-        tim2 = qtim2.get()
-        pos2 = qpos2.get()
+    while True:
+        
+        if fin.get() != 2:
+            if qtim1.any() and qpos1.any() and qtim2.any() and qpos2.any():
+                tim1 = qtim1.get()
+                pos1 = qpos1.get()
+                tim2 = qtim2.get()
+                pos2 = qpos2.get()
 
-        ser.write(f"{tim1},{pos1},{tim2},{pos2}\r \n")
-
-    yield 0
+                ser.write(f"{tim1},{pos1},{tim2},{pos2}\r \n")
+        print("end serprint")
+        yield 0
 
 
 # This code creates a share, a queue, and two tasks, then starts the tasks. The
@@ -194,16 +204,16 @@ if __name__ == "__main__":
     """share0 = task_share.Share('h', thread_protect=False, name="Share 0")
     q0 = task_share.Queue('L', 16, thread_protect=False, overwrite=False, name="Queue 0")
     """
-    qtim1 = task_share.Queue('i',16,thread_protect=False,overwrite=False,name="time1")
-    qpos1 = task_share.Queue('i',16,thread_protect=False,overwrite=False,name="position1")
-    qtim2 = task_share.Queue('i',16,thread_protect=False,overwrite=False,name="time2")
-    qpos2 = task_share.Queue('i',16,thread_protect=False,overwrite=False,name="position2")
+    qtim1 = task_share.Queue('i',300,thread_protect=False,overwrite=False,name="time1")
+    qpos1 = task_share.Queue('i',300,thread_protect=False,overwrite=False,name="position1")
+    qtim2 = task_share.Queue('i',300,thread_protect=False,overwrite=False,name="time2")
+    qpos2 = task_share.Queue('i',300,thread_protect=False,overwrite=False,name="position2")
 
-    skp1 = task_share.share("i", thread_protect=False, name="shared_kp1")
-    sendpos1 = task_share.share("i",thread_protect=False, name="shared_endpos1")
-    skp2 = task_share.share("i", thread_protect=False, name="shared_kp2")
-    sendpos2 = task_share.share("i",thread_protect=False, name="shared_endpos2")
-    fin = task_share.share("i", thread_protect=False, name="finished")
+    skp1 = task_share.Share("i", thread_protect=False, name="shared_kp1")
+    sendpos1 = task_share.Share("i",thread_protect=False, name="shared_endpos1")
+    skp2 = task_share.Share("i", thread_protect=False, name="shared_kp2")
+    sendpos2 = task_share.Share("i",thread_protect=False, name="shared_endpos2")
+    fin = task_share.Share("i", thread_protect=False, name="finished")
 
     # Create the tasks. If trace is enabled for any task, memory will be
     # allocated for state transition tracing, and the application will run out
@@ -216,15 +226,20 @@ if __name__ == "__main__":
     """
 
     skp1.put(m1.kp)
-    sendpos1.put(m2.endpos)
+    sendpos1.put(m1.endpos)
     skp2.put(m2.kp)
     sendpos2.put(m2.endpos)
     fin.put(0)
 
     mot1 = cotask.Task(motor1, name = "motor_1", priority=1, period=15, profile=True, trace=False, shares=(qtim1,qpos1,skp1,sendpos1,fin))
-    mot2 = cotask.Task(motor2, name = "motor_2", priority=1, period=15, profile=True, trace=False, shares=(qtim2,qpos2,skp2,sendpos2,fin))
-    arr = cotask.Task(serprint, name = "serial_print", priority=2, period=15, profile=True, trace=False, shares=(qtim1,qpos1,qtim2,qpos2,fin))
+    mot2 = cotask.Task(motor2, name = "motor_2", priority=2, period=15, profile=True, trace=False, shares=(qtim2,qpos2,skp2,sendpos2,fin))
+    arr = cotask.Task(serprint, name = "serial_print", priority=0, period=15, profile=True, trace=False, shares=(qtim1,qpos1,qtim2,qpos2,fin))
 
+
+    cotask.task_list.append(mot1)
+    cotask.task_list.append(mot2)
+    cotask.task_list.append(arr)
+    
     # Run the memory garbage collector to ensure memory is as defragmented as
     # possible before the real-time scheduler is started
     gc.collect()

@@ -22,11 +22,11 @@ try:
         if kp1 == "plot" or kp1 == "plot1": raise KeyboardInterrupt
         endpos1 = input("what is the final position for motor 1? ")
         kp2 = input("what is the value of kp for motor 2? ")
-        endpos2 = input("what is the final position for motor 1? ")
+        endpos2 = input("what is the final position for motor 2? ")
 
         
 
-        with serial.Serial("COM4",115200) as file:
+        with serial.Serial("COM7",115200) as file:
 
             file.write(b"start")
             print("started")
@@ -68,7 +68,7 @@ try:
 
                 try:
                     sep[0] = sep[0].strip()
-                    sep[0] = sep[0].strip(" #Aabcdefghijklmnopqrstuvwxyz ")
+                    sep[0] = sep[0].strip(" '#Aabcdefghijklmnopqrstuvwxyz ")
                     x = float(sep[0])  
                 except ValueError:
                     good[0] = False
@@ -79,7 +79,7 @@ try:
                     
                 try:
                     sep[1] = sep[1].strip()
-                    strip = sep[1].strip(" #Aabcdefghijklmnopqrstuvwxyz ")
+                    strip = sep[1].strip(" '#Aabcdefghijklmnopqrstuvwxyz ")
                     y = float(strip)
                 except ValueError:
                     good[1] = False
@@ -90,7 +90,7 @@ try:
 
                 try:
                     sep[2] = sep[2].strip()
-                    strip = sep[2].strip(" #Aabcdefghijklmnopqrstuvwxyz ")
+                    strip = sep[2].strip(" '#Aabcdefghijklmnopqrstuvwxyz ")
                     z = float(strip)
                 except ValueError:
                     good[2] = False
@@ -101,7 +101,7 @@ try:
 
                 try:
                     sep[3] = sep[3].strip()
-                    strip = sep[3].strip(" #Aabcdefghijklmnopqrstuvwxyz ")
+                    strip = sep[3].strip(" '#Aabcdefghijklmnopqrstuvwxyz ")
                     w = float(strip)
                 except ValueError:
                     good[3] = False
@@ -110,7 +110,7 @@ try:
                 else:
                     good[3] = True
 
-                if good == [True,True,True]:
+                if good == [True,True,True,True]:
                     numx1.append(x)
                     numy1.append(y)
                     numx2.append(z)
@@ -127,8 +127,12 @@ try:
                     
         #titley = titley.strip()
         pyplot.plot(numx1,numy1)
+        pyplot.plot(numx2, numy2)
         pyplot.xlabel("time (ms)")
         pyplot.ylabel("Position")
+
+
+
 
 except KeyboardInterrupt:
     if kp1 == "plot1":
