@@ -1,11 +1,11 @@
 """!
 @package docstring
-Lab 2 - Out of Control
+Lab 3 - On schedule
 
 @file Computer_main.py
 
-@brief Takes a value of kp and final position then starts running the motor. When done, makes plots.
-@details Runs in a loop to repeat the process of starting the motor with potentially different kp and end position, and sends this over com4. Once all loops are complete, it prints a single plot with all runs separated.
+@brief Takes a values of kp and final position then asks MCU to start running the motors. When done, makes plot.
+@details First, main.py must be run on the MCU. Then this program must be run to send Kp and and setpoint values to the MCU, which performs the motor control tasks. After the step response test is complete, this program will ask the user to type in "plot" to plot the graph of the step response test.
 """
 
 from matplotlib import pyplot
@@ -50,6 +50,7 @@ try:
             waiter = file.in_waiting
             while waiter == 0:
                 waiter = file.in_waiting
+                #print(waiter)
             
 
             data = []
@@ -58,13 +59,16 @@ try:
             numx2 = []
             numy2 = []
 
-            for asdf in range(300):
+            for asdf in range(50):
                 datastr = file.readline()
                 data.append(datastr.decode())
+
             
             for line in data:
                 str = line
                 sep = str.split(",")
+
+
 
                 try:
                     sep[0] = sep[0].strip()
@@ -123,6 +127,8 @@ try:
                     print(f"bad string {sep[2]}")
                 else:
                     print(f"2-4 strings bad {sep}")
+
+
 
                     
         #titley = titley.strip()

@@ -1,14 +1,11 @@
 """!
-@file basic_tasks.py
-    This file contains a demonstration program that runs some tasks, an
-    inter-task shared variable, and a queue. The tasks don't really @b do
-    anything; the example just shows how these elements are created and run.
+@file main.py
+    This file contains the motor control code which runs on the MCU.
 
-@author JR Ridgely
-@date   2021-Dec-15 JRR Created from the remains of previous example
-@copyright (c) 2015-2021 by JR Ridgely and released under the GNU
-    Public License, Version 2. 
+@brief Sets up 2 motors and runs motor control tasks.
+@details This program contains 3 tasks, two tasks for motor control, and one for sending data back to the computer. The tasks are run based on priority, with the motor control tasks having higher priority.
 """
+
 
 import gc
 import pyb
@@ -79,7 +76,7 @@ def motor1(shares1):
     Task which puts things into a share and a queue.
     @param shares A list holding the share and queue used by this task
     """
-    print("in motor1")
+    #print("in motor1")
     # Get references to the share and queue which have been passed to this task
     qtim1, qpos1, skp1, sendpos1, fin = shares1
 
@@ -106,21 +103,23 @@ def motor1(shares1):
     timestart = utime.ticks_ms()
 
     n=0
+    nmax=50
 
     while True:
         posnow = encreader1.read()
         level = pdriver.run(posnow)
         mdriver1.set_duty_cycle(level)
         timenow = utime.ticks_ms()
-        if n != 300:
+        if n < nmax:
             if qtim1.full() == False and qpos1.full() == False:
                 qtim1.put(utime.ticks_diff(timenow,timestart))
                 qpos1.put(posnow)
                 n += 1
         else:
             fin.put(fin.get()+1)
+            
 
-        print("end motor1, n=",n)
+        #print("end motor1, n=",n)
         yield 0
 
 
@@ -130,7 +129,7 @@ def motor2(shares2):
     @param shares A tuple of a share and queue from which this task gets data
     """
     # Get references to the share and queue which have been passed to this task
-    print("in motor2")
+    #print("in motor2")
     qtim2, qpos2, skp2, sendpos2, fin = shares2
 
     tim4 = pyb.Timer (4, prescaler=0, period=0xFFFF)
@@ -156,39 +155,48 @@ def motor2(shares2):
     timestart = utime.ticks_ms()
 
     n=0
+    nmax=50
 
     while True:
         posnow = encreader2.read()
         level = pdriver.run(posnow)
         mdriver2.set_duty_cycle(level)
         timenow = utime.ticks_ms()
-        if n != 300:
+        if n < nmax:
             if qtim2.full() == False and qpos2.full() == False:
                 qtim2.put(utime.ticks_diff(timenow,timestart))
                 qpos2.put(posnow)
                 n += 1
         else:
             fin.put(fin.get()+1)
-        print("end motor2, n=",n)
+            
+        #print("end motor2, n=",n)
         yield 0
 
 def serprint(shares):
-    print("in serprint")
+    """!
+    Task which sends motor step response test data serially to the computer
+    @param shares A tuple of a share and queue from which this task gets data
+    """
+    #print("in serprint")
     
     global ser
     qtim1, qpos1, qtim2, qpos2, fin = shares
 
     while True:
+        #print("fin=", fin.get())
         
-        if fin.get() != 2:
+        if fin.get() < 2:
             if qtim1.any() and qpos1.any() and qtim2.any() and qpos2.any():
                 tim1 = qtim1.get()
                 pos1 = qpos1.get()
                 tim2 = qtim2.get()
                 pos2 = qpos2.get()
-
+                
+                #input("serprint writing")
                 ser.write(f"{tim1},{pos1},{tim2},{pos2}\r \n")
-        print("end serprint")
+       
+        #print("end serprint")
         yield 0
 
 
@@ -231,9 +239,10 @@ if __name__ == "__main__":
     sendpos2.put(m2.endpos)
     fin.put(0)
 
-    mot1 = cotask.Task(motor1, name = "motor_1", priority=1, period=15, profile=True, trace=False, shares=(qtim1,qpos1,skp1,sendpos1,fin))
-    mot2 = cotask.Task(motor2, name = "motor_2", priority=2, period=15, profile=True, trace=False, shares=(qtim2,qpos2,skp2,sendpos2,fin))
-    arr = cotask.Task(serprint, name = "serial_print", priority=0, period=15, profile=True, trace=False, shares=(qtim1,qpos1,qtim2,qpos2,fin))
+    per = 35
+    mot1 = cotask.Task(motor1, name = "motor_1", priority=1, period=per, profile=True, trace=False, shares=(qtim1,qpos1,skp1,sendpos1,fin))
+    mot2 = cotask.Task(motor2, name = "motor_2", priority=2, period=per, profile=True, trace=False, shares=(qtim2,qpos2,skp2,sendpos2,fin))
+    arr = cotask.Task(serprint, name = "serial_print", priority=0, period=per, profile=True, trace=False, shares=(qtim1,qpos1,qtim2,qpos2,fin))
 
 
     cotask.task_list.append(mot1)
